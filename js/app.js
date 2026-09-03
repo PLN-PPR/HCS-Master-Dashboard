@@ -156,9 +156,11 @@ async function writeDataCache(payload){
 }
 
 function setLoading(active){
-  const overlay=$('loadingOverlay'),button=$('refreshBtn');
-  overlay.classList.toggle('is-hidden',!active);button.disabled=active;
-  button.textContent=active?'↻ Memuat Data…':'↻ Refresh Database';
+  const bar=$('loadingBar'),button=$('refreshBtn');
+  if(bar)bar.classList.toggle('is-hidden',!active);
+  document.body.classList.toggle('data-loading',active);
+  button.disabled=active;
+  button.textContent=active?'Memperbarui data…':'↻ Refresh Database';
 }
 
 function loadAppsScriptData(){
