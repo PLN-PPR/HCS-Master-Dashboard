@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HCS Performance Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <section id="loginScreen" class="login-screen">
+    <div class="login-panel">
+      <img src="assets/logo-pln.webp" alt="Logo PLN" class="login-logo">
+      <span class="login-eyebrow">HOME CHARGING SERVICES</span>
+      <h1>HCS Performance Dashboard</h1>
+      <p>Akses dashboard monitoring pelanggan dan transaksi HCS.</p>
+      <form id="loginForm" class="login-form">
+        <label>Username<input id="loginUsername" type="text" autocomplete="username" required></label>
+        <label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label>
+        <div id="loginError" class="login-error" role="alert"></div>
+        <button type="submit">Masuk ke Dashboard</button>
+      </form>
+      <small>PT PLN (Persero) · Data bersumber dari Google Sheet Master</small>
+    </div>
+  </section>
+
+  <div id="dashboardApp" class="dashboard-app is-hidden">
+  <aside class="sidebar">
+    <div class="brand-block">
+      <img src="assets/logo-pln.webp" alt="Logo PLN" class="brand-logo">
+      <div class="brand-title">Performance Dashboard</div>
+      <div class="brand-subtitle">Home Charging Services</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-target="executive"><span class="nav-icon">⌂</span><span>Executive Summary</span></button>
+
+      <div class="nav-label">PERFORMANCE UTAMA</div>
+      <button class="nav-item" data-target="performance"><span class="nav-icon">▥</span><span>Performance Utama</span></button>
+
+      <div class="nav-label">SEGMENT & TARIF</div>
+      <button class="nav-item" data-target="segments"><span class="nav-icon">◫</span><span>Segment & Tarif</span></button>
+
+      <div class="nav-label">DATA DETAIL</div>
+      <button class="nav-item" data-target="database"><span class="nav-icon">▦</span><span>Data Detail</span></button>
+    </nav>
+
+    <div class="sidebar-visual" aria-label="Mobil listrik sedang home charging">
+      <img src="assets/sidebar-home-charging.png" alt="Mobil listrik sedang charging di rumah">
+      <div class="sidebar-visual-blend"></div>
+    </div>
+
+    <div class="side-info">
+      <div class="side-label">Sumber Data</div>
+      <div>Google Sheet Master HCS</div>
+      <div class="side-label gap">Status</div>
+      <div id="dbStatus" class="status-dot">Menunggu database…</div>
+    </div>
+
+    <button id="logoutBtn" class="logout-btn">Keluar</button>
+    <div class="sidebar-footer">HCS Dashboard · Online<br><span>Data diproses di perangkat</span></div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div>
+        <h1>HCS Performance Dashboard</h1>
+        <p>Monitoring Pelanggan & Transaksi Home Charging Services</p>
+      </div>
+      <button id="refreshBtn" class="refresh-btn">↻ Refresh Database</button>
+    </header>
+
+    <section id="executive" class="section-anchor">
+      <div class="section-heading with-controls">
+        <div>
+          <span class="eyebrow">EXECUTIVE SUMMARY</span>
+          <h2>Ringkasan Kinerja HCS</h2>
+        </div>
+
+      </div>
+
+      <div class="kpi-grid">
+        <div class="card kpi"><div class="kpi-icon">👥</div><div><span>Total Pelanggan HCS</span><h2 id="kpiPelanggan">–</h2><small id="kpiPelangganSub">periode data terakhir</small></div></div>
+        <div class="card kpi"><div class="kpi-icon">＋</div><div><span>Penambahan Pelanggan</span><h2 id="kpiPenambahan">–</h2><small id="kpiPenambahanSub">periode data terakhir</small></div></div>
+        <div class="card kpi"><div class="kpi-icon">⚡</div><div><span>Transaksi kWh Bulanan</span><h2 id="kpiKwh">–</h2><small id="kpiKwhSub">periode data terakhir · GWh</small></div></div>
+        <div class="card kpi"><div class="kpi-icon">↗</div><div><span>Growth MoM</span><h2 id="kpiMom">–</h2><small id="kpiMomSub">periode data terakhir · vs bulan sebelumnya</small></div></div>
+        <div class="card kpi"><div class="kpi-icon">Σ</div><div><span>Transaksi Kumulatif</span><h2 id="kpiKumulatif">–</h2><small id="kpiKumulatifSub">periode data terakhir · GWh</small></div></div>
+      </div>
+    </section>
+
+    <section id="performance" class="section-anchor">
+      <div class="section-heading">
+        <div><span class="eyebrow">PERFORMANCE UTAMA</span><h2>Pelanggan & Transaksi</h2></div>
+        <p>Filter tersedia pada masing-masing grafik sesuai sumber datanya.</p>
+      </div>
+
+      <div class="dashboard-grid performance-grid">
+        <article class="card chart-card">
+          <div class="card-header"><div><h3>1. Penambahan HCS Tahunan</h3><p>Tren tahunan</p></div><div class="card-actions"><select class="scope-select" id="f1UID"></select><button class="download-chart" data-chart="chartPlgTahunan">PNG</button><button class="download-chart-xlsx" data-chart="chartPlgTahunan">Excel</button></div></div>
+          <div class="chart-wrap"><canvas id="chartPlgTahunan"></canvas></div>
+        </article>
+
+        <article class="card chart-card">
+          <div class="card-header"><div><h3>2. Penambahan HCS Bulanan 2026</h3><p>Data Tahun 2026</p></div><div class="card-actions"><select class="scope-select" id="f2UID"></select><select id="f2Month"></select><button class="download-chart" data-chart="chartPlgBulanan">PNG</button><button class="download-chart-xlsx" data-chart="chartPlgBulanan">Excel</button></div></div>
+          <div class="chart-wrap"><canvas id="chartPlgBulanan"></canvas></div>
+        </article>
+
+        <article class="card chart-card">
+          <div class="card-header"><div><h3>3. Transaksi HCS per Tahun</h3><p>Nasional</p></div><div class="card-actions"><button class="download-chart" data-chart="chartKwhTahunan">PNG</button><button class="download-chart-xlsx" data-chart="chartKwhTahunan">Excel</button></div></div>
+          <div class="chart-wrap"><canvas id="chartKwhTahunan"></canvas></div>
+        </article>
+
+        <article class="card chart-card">
+          <div class="card-header"><div><h3>4. Tren Transaksi per Bulan 2026</h3><p>Data Tahun 2026</p></div><div class="card-actions"><select class="scope-select" id="f4UID"></select><select id="f4Month"></select><button class="download-chart" data-chart="chartKwhBulanan">PNG</button><button class="download-chart-xlsx" data-chart="chartKwhBulanan">Excel</button></div></div>
+          <div class="chart-wrap"><canvas id="chartKwhBulanan"></canvas></div>
+        </article>
+
+        <article class="card chart-card">
+          <div class="card-header"><div><h3>5. Pertumbuhan Transaksi MoM 2026</h3><p>Data Tahun 2026</p></div><div class="card-actions"><select class="scope-select" id="f5UID"></select><select id="f5Month"></select><button class="download-chart" data-chart="chartMom">PNG</button><button class="download-chart-xlsx" data-chart="chartMom">Excel</button></div></div>
+          <div class="chart-wrap"><canvas id="chartMom"></canvas></div>
+        </article>
+
+        <article class="card chart-card">
+          <div class="card-header"><div><h3>6. Transaksi Kumulatif 2026</h3><p>Data Tahun 2026</p></div><div class="card-actions"><select class="scope-select" id="f6UID"></select><select id="f6Month"></select><button class="download-chart" data-chart="chartKumulatif">PNG</button><button class="download-chart-xlsx" data-chart="chartKumulatif">Excel</button></div></div>
+          <div class="chart-wrap"><canvas id="chartKumulatif"></canvas></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="segments" class="section-anchor">
+      <div class="section-heading">
+        <div><span class="eyebrow">SEGMENT & TARIF</span><h2>Integrasi, Non Integrasi & Tarif</h2></div>
+        <p>Seluruh data bulanan pada grouping ini merupakan Data Tahun 2026.</p>
+      </div>
+
+      <div class="dashboard-grid segment-grid">
+        <article class="card chart-card compact">
+          <div class="card-header"><div><h3>7. Komposisi Pelanggan Integrasi vs Non Integrasi</h3><p>Data Tahun 2026 · Nasional</p></div><div class="card-actions"><select id="f7Month"></select><button class="download-chart" data-chart="chartKomposisi">PNG</button><button class="download-chart-xlsx" data-chart="chartKomposisi">Excel</button></div></div>
+          <div class="chart-wrap donut"><canvas id="chartKomposisi"></canvas></div>
+        </article>
+
+        <article class="card chart-card">
+          <div class="card-header"><div><h3>8. Pelanggan Integrasi vs Non Integrasi per Bulan 2026</h3><p>Grafik batang · Data Tahun 2026</p></div><div class="card-actions"><select id="f8Month"></select><button class="download-chart" data-chart="chartPlgIntegrasi">PNG</button><button class="download-chart-xlsx" data-chart="chartPlgIntegrasi">Excel</button></div></div>
+          <div class="chart-wrap"><canvas id="chartPlgIntegrasi"></canvas></div>
+        </article>
+
+        <article class="card chart-card">
+          <div class="card-header"><div><h3>9. kWh Integrasi vs Non Integrasi per Bulan 2026</h3><p>Data Tahun 2026</p></div><div class="card-actions"><select id="f9Month"></select><button class="download-chart" data-chart="chartKwhIntegrasi">PNG</button><button class="download-chart-xlsx" data-chart="chartKwhIntegrasi">Excel</button></div></div>
+          <div class="chart-wrap"><canvas id="chartKwhIntegrasi"></canvas></div>
+        </article>
+
+        <article class="card chart-card">
+          <div class="card-header"><div><h3>10. kWh Diskon vs Reguler per Bulan 2026</h3><p>Grafik garis · Data Tahun 2026</p></div><div class="card-actions"><select id="f10Month"></select><button class="download-chart" data-chart="chartDiskon">PNG</button><button class="download-chart-xlsx" data-chart="chartDiskon">Excel</button></div></div>
+          <div class="chart-wrap"><canvas id="chartDiskon"></canvas></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="database" class="section-anchor">
+      <div class="section-heading">
+        <div><span class="eyebrow">DATA DETAIL</span><h2>4 Tabel Database Utama</h2></div>
+        <p>UID/UIW ke bawah dan periode ke samping.</p>
+      </div>
+
+      <div class="card table-shell">
+        <div class="table-toolbar">
+          <div class="tab-group">
+            <button class="table-tab active" data-table="plgTahunan">Pelanggan Tahunan</button>
+            <button class="table-tab" data-table="plgBulanan">Pelanggan Bulanan 2026</button>
+            <button class="table-tab" data-table="kwhBulanan">kWh Bulanan 2026</button>
+            <button class="table-tab" data-table="kwhKumulatif">kWh Kumulatif 2026</button>
+          </div>
+          <div class="table-actions">
+            <input id="tableSearch" type="search" placeholder="Cari UID/UIW…">
+            <button id="exportCsv">CSV</button>
+            <button id="exportXlsx">Excel</button>
+          </div>
+        </div>
+        <div class="table-title-row"><div><h3 id="activeTableTitle">Pelanggan per UID/UIW per Tahun</h3><p id="activeTableSubtitle">Nilai pelanggan; tahun disusun ke samping</p></div></div>
+        <div class="table-wrapper"><table id="dataTable"><thead id="dataTableHead"></thead><tbody id="dataTableBody"></tbody></table></div>
+      </div>
+    </section>
+  </main>
+  </div>
+
+  <script src="libs/xlsx.full.min.js"></script>
+  <script src="libs/chart.umd.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
