@@ -95,9 +95,32 @@ function fillMonthSelect(id,sourceRows,metricKeys,year=2026){const el=$(id);if(!
 function monthSeries(rows,metric,uid,through,year=2026){const base=scopeRows(rows.filter(r=>num(r.tahun)===year),uid);return MONTHS.slice(0,through).map((_,i)=>{const rs=base.filter(r=>num(r.bulan_no)===i+1&&num(r[metric])!==null);return rs.length?rs.reduce((s,r)=>s+(num(r[metric])||0),0):null})}
 function kumSeries(uid,through,year=2026){return monthSeries(DATA.kumulatif,'penjualan kumulatif (kWh)',uid,through,year)}
 
-async function loadDatabase(){
-  const status=$('dbStatus');status.textContent='Memuat database…';
-  const payload=await loadAppsScriptData();
+async function loadDatabase(forceRefresh=false){
+  const status=$('dbStatus');
+  if(!forceRefresh){
+    const cached=await readDataCache().catch(()=>null);
+    if(cached){
+      applyDatabasePayload(cached);
+      status.textContent='● Data tersimpan aktif';status.style.color='#c8f6ee';
+      refreshFromNetwork(false).catch(()=>{status.textContent='● Data tersimpan aktif';});
+      return;
+    }
+  }
+  return refreshFromNetwork(true);
+}
+
+async function refreshFromNetwork(showOverlay=true){
+  const status=$('dbStatus');
+  if(showOverlay)setLoading(true);status.textContent='Memuat database…';
+  try{
+    const payload=await loadAppsScriptData();
+    applyDatabasePayload(payload);
+    writeDataCache(payload).catch(()=>{});
+    status.textContent='● Google Sheet aktif';status.style.color='#c8f6ee';
+  }finally{if(showOverlay)setLoading(false)}
+}
+
+function applyDatabasePayload(payload){
   if(payload?._meta?.success===false)throw new Error(payload._meta.message||'Google Sheet gagal dibaca');
   DATA.plgTahunan=sheetRows(payload,'1_PLG_TAHUNAN');
   DATA.bulanan=sheetRows(payload,'2_PLGKWH_BULANAN2026');
@@ -107,9 +130,35 @@ async function loadDatabase(){
   DATA.diskon=sheetRows(payload,'6_KWH_DIKSON');
   const missing=['1_PLG_TAHUNAN','2_PLGKWH_BULANAN2026','3_KWH_KUMULATIF2026','4_NASIONAL_KWH_TAHUNAN','5_PLGKWH_BULANAN_INTEGRASI','6_KWH_DIKSON'].filter(name=>!payload?.sheets?.[name]);
   if(missing.length)throw new Error('Tab tidak ditemukan: '+missing.join(', '));
-  status.textContent='● Google Sheet aktif';
-  status.style.color='#c8f6ee';
   initFilters();renderAll();
+}
+
+function openCacheDB(){
+  return new Promise((resolve,reject)=>{
+    const request=indexedDB.open('hcs-dashboard-cache',1);
+    request.onupgradeneeded=()=>request.result.createObjectStore('data');
+    request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);
+  });
+}
+async function readDataCache(){
+  const db=await openCacheDB();
+  return new Promise((resolve,reject)=>{
+    const request=db.transaction('data','readonly').objectStore('data').get('latest');
+    request.onsuccess=()=>{db.close();resolve(request.result||null)};request.onerror=()=>{db.close();reject(request.error)};
+  });
+}
+async function writeDataCache(payload){
+  const db=await openCacheDB();
+  return new Promise((resolve,reject)=>{
+    const transaction=db.transaction('data','readwrite');transaction.objectStore('data').put(payload,'latest');
+    transaction.oncomplete=()=>{db.close();resolve()};transaction.onerror=()=>{db.close();reject(transaction.error)};
+  });
+}
+
+function setLoading(active){
+  const overlay=$('loadingOverlay'),button=$('refreshBtn');
+  overlay.classList.toggle('is-hidden',!active);button.disabled=active;
+  button.textContent=active?'↻ Memuat Data…':'↻ Refresh Database';
 }
 
 function loadAppsScriptData(){
@@ -127,7 +176,7 @@ function loadAppsScriptData(){
     }
     window[callback]=data=>finish(null,data);
     script.onerror=()=>finish(new Error('Endpoint Apps Script tidak dapat diakses'));
-    script.src=url+'?callback='+encodeURIComponent(callback)+'&t='+Date.now();
+    script.src=url+'?scope=dashboard&callback='+encodeURIComponent(callback)+'&t='+Date.now();
     document.head.appendChild(script);
   });
 }
@@ -292,7 +341,7 @@ function bind(){
   document.querySelectorAll('.table-tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.table-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');activeTable=b.dataset.table;renderTable()});
   document.querySelectorAll('.download-chart').forEach(b=>b.onclick=()=>downloadChartPNG(b.dataset.chart));
   document.querySelectorAll('.download-chart-xlsx').forEach(b=>b.onclick=()=>downloadChartXLSX(b.dataset.chart));
-  $('exportCsv').onclick=exportCSV;$('exportXlsx').onclick=exportXLSX;$('tableSearch').oninput=renderTable;$('refreshBtn').onclick=()=>loadDatabase().catch(showError);
+  $('exportCsv').onclick=exportCSV;$('exportXlsx').onclick=exportXLSX;$('tableSearch').oninput=renderTable;$('refreshBtn').onclick=()=>loadDatabase(true).catch(showError);
   $('logoutBtn').onclick=logout;
   ['f1UID','f2UID','f2Month','f4UID','f4Month','f5UID','f5Month','f6UID','f6Month','f7Month','f8Month','f9Month','f10Month'].forEach(id=>$(id).onchange=renderCharts);
 }
