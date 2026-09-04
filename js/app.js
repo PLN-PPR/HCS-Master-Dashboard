@@ -171,7 +171,7 @@ function loadAppsScriptData(){
   return new Promise((resolve,reject)=>{
     const callback='hcsData_'+Date.now()+'_'+Math.random().toString(36).slice(2);
     const script=document.createElement('script');
-    const timer=setTimeout(()=>finish(new Error('Waktu membaca Google Sheet habis')),30000);
+    const timer=setTimeout(()=>finish(new Error('Waktu membaca Google Sheet habis')),120000);
     function finish(error,data){
       clearTimeout(timer);delete window[callback];script.remove();
       error?reject(error):resolve(data);
