@@ -171,7 +171,7 @@ function loadAppsScriptData(){
   return new Promise((resolve,reject)=>{
     const callback='hcsData_'+Date.now()+'_'+Math.random().toString(36).slice(2);
     const script=document.createElement('script');
-    const timer=setTimeout(()=>finish(new Error('Waktu membaca Google Sheet habis')),120000);
+    const timer=setTimeout(()=>finish(new Error('Waktu membaca Google Sheet habis')),30000);
     function finish(error,data){
       clearTimeout(timer);delete window[callback];script.remove();
       error?reject(error):resolve(data);
@@ -284,7 +284,7 @@ function renderCharts(){
   const m9=num($('f9Month').value)||1,l9=MONTHS.slice(0,m9),i9=segSeries('INTEGRASI','penjualan bulanan (KWh)',m9,1e6),n9=segSeries('NON INTEGRASI','penjualan bulanan (KWh)',m9,1e6);
   makeChart('chartKwhIntegrasi','bar',l9,[{label:'Integrasi',data:i9,backgroundColor:PALETTE.blue,borderRadius:4},{label:'Non Integrasi',data:n9,backgroundColor:PALETTE.teal,borderRadius:4}],{tickCallback:fmtGWh,labelFormatter:v=>v==null?'':fmtLabelGWh(v),tooltipCallbacks:{label:c=>c.raw==null?'Belum ada data':`${c.dataset.label}: ${fmtGWh(c.raw)} GWh`},downloadName:'kWh_Integrasi_vs_Non_Integrasi_2026'});
 
-  const m10=num($('f10Month').value)||1,l10=MONTHS.slice(0,m10);const tariff=(name)=>MONTHS.slice(0,m10).map((_,i)=>{const rs=DATA.diskon.filter(r=>num(r.tahun)===2026&&num(r.bulan_no)===i+1&&clean(r.segment_tarif)===name&&num(r['penjualan bulanan (kWh)'])!==null);return rs.length?rs.reduce((s,r)=>s+(num(r['penjualan bulanan (kWh)'])||0),0)/1e9:null});
+  const m10=num($('f10Month').value)||1,l10=MONTHS.slice(0,m10);const tariff=(name)=>MONTHS.slice(0,m10).map((_,i)=>{const rs=DATA.diskon.filter(r=>num(r.tahun)===2026&&num(r.bulan_no)===i+1&&clean(r.segment_tarif)===name&&num(r['penjualan bulanan (kWh)'])!==null);return rs.length?rs.reduce((s,r)=>s+(num(r['penjualan bulanan (kWh)'])||0),0)/1e6:null});
   makeChart('chartDiskon','line',l10,[{label:'Diskon 30%',data:tariff('DISKON 30%'),borderColor:PALETTE.blue,backgroundColor:PALETTE.blue,tension:.25,pointRadius:3},{label:'Reguler',data:tariff('REGULER'),borderColor:PALETTE.teal,backgroundColor:PALETTE.teal,tension:.25,pointRadius:3}],{tickCallback:fmtGWh,labelFormatter:v=>v==null?'':fmtLabelGWh(v),tooltipCallbacks:{label:c=>c.raw==null?'Belum ada data':`${c.dataset.label}: ${fmtGWh(c.raw)} GWh`},downloadName:'kWh_Diskon_vs_Reguler_2026'});
 }
 
